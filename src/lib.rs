@@ -1,21 +1,35 @@
 use std::cmp::Ordering;
 use std::fmt::Display;
+use std::sync::OnceLock;
+use crate::hashes::{calculate_hashes, Hashes};
 use crate::twine::Twine;
 
 pub mod twine;
+mod hashes;
 
 #[derive(Clone, Debug)]
 pub struct Strey {
     prefix: Option<Box<Strey>>,
-    hash1: u64,
-    hash2: u64,
     string: Twine,
+    hash_lock: OnceLock<Hashes>,
 }
 
 impl Strey {
-    pub fn new(prefix: Option<Box<Strey>>, string: Twine) -> Strey {
-        let (hash1, hash2) = calculate_hashes(&prefix, &string);
-        Strey { prefix, hash1, hash2, string }
+    pub const fn new(prefix: Option<Box<Strey>>, string: Twine) -> Strey {
+        let hash_lock = OnceLock::new();
+        Strey { prefix, string, hash_lock }
+    }
+
+    pub fn new_string(string: String) -> Strey {
+        Strey::new(None, Twine::new(string))
+    }
+
+    pub const fn new_str(string: &'static str) -> Strey {
+        Strey::new(None, Twine::new_str(string))
+    }
+
+    fn get_hashes(&self) -> &Hashes {
+        self.hash_lock.get_or_init(|| calculate_hashes(&self.prefix, &self.string))
     }
     pub fn len(&self) -> usize {
         match &self.prefix {
@@ -43,21 +57,6 @@ impl Strey {
     }
 }
 
-const HASH_MUL: u64 = 19;
-
-fn calculate_hashes(prefix: &Option<Box<Strey>>, string: &Twine) -> (u64, u64) {
-    let (mut hash1, mut hash2) =
-        match prefix {
-            None => { (0u64, 0u64) }
-            Some(prefix) => { (prefix.hash1, prefix.hash2) }
-        };
-    for byte in string.as_str().as_bytes() {
-        hash1 = hash1.wrapping_mul(HASH_MUL).wrapping_add(*byte as u64);
-        hash2 = hash2.wrapping_mul(HASH_MUL).wrapping_add(*byte as u64).wrapping_add(1);
-    }
-    (hash1, hash2)
-}
-
 impl Display for Strey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.prefix {
@@ -72,7 +71,7 @@ impl Display for Strey {
 
 impl PartialEq for Strey {
     fn eq(&self, other: &Self) -> bool {
-        self.hash1 == other.hash1 && self.hash2 == other.hash2
+        self.get_hashes() == other.get_hashes()
     }
 }
 

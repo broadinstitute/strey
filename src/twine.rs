@@ -8,7 +8,10 @@ pub enum Twine {
 }
 
 impl Twine {
-    pub const fn from_str(s: &'static str) -> Self {
+    pub fn new(s: String) -> Self {
+        Twine::Owned(Arc::new(s))
+    }
+    pub const fn new_str(s: &'static str) -> Self {
         Twine::Borrowed(s)
     }
     pub fn as_str(&self) -> &str {
@@ -42,13 +45,13 @@ impl Twine {
 
 impl From<String> for Twine {
     fn from(s: String) -> Self {
-        Twine::Owned(Arc::new(s))
+        Twine::new(s)
     }
 }
 
 impl From<&'static str> for Twine {
     fn from(s: &'static str) -> Self {
-        Twine::Borrowed(s)
+        Twine::new_str(s)
     }
 }
 
