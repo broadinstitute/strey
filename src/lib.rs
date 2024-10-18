@@ -103,9 +103,6 @@ impl Strey {
             Some(prefix) => { Box::new(prefix.chars().chain(self.string.chars())) }
         }
     }
-    pub fn strip_prefix(&self, prefix: &Strey) -> Option<Box<dyn Iterator<Item=char> + '_>> {
-        todo!()
-    }
 }
 
 impl Display for Strey {
