@@ -35,6 +35,12 @@ impl Prefix {
             Prefix::Owned(strey) => { strey.bytes() }
         }
     }
+    pub fn chars(&self) -> Box<dyn Iterator<Item=char> + '_> {
+        match self {
+            Prefix::Borrowed(strey) => { strey.chars() }
+            Prefix::Owned(strey) => { strey.chars() }
+        }
+    }
 }
 
 impl Display for Prefix {
@@ -60,6 +66,19 @@ impl Strey {
         Strey::new(None, Twine::new_str(string))
     }
 
+    pub fn append(&self, string: String) -> Strey {
+        Strey::new(Some(Prefix::Owned(Box::new(self.clone()))), string.into())
+    }
+    pub fn append_str(&self, string: &'static str) -> Strey {
+        Strey::new(Some(Prefix::Owned(Box::new(self.clone()))), string.into())
+    }
+    pub fn join(&'static self, string: String) -> Strey {
+        Strey::new(Some(Prefix::Borrowed(self)), string.into())
+    }
+    pub const fn join_str(&'static self, string: &'static str) -> Strey {
+        Strey::new(Some(Prefix::Borrowed(self)), Twine::Borrowed(string))
+    }
+
     pub fn len(&self) -> usize {
         match &self.prefix {
             None => { self.string.len() }
@@ -78,17 +97,14 @@ impl Strey {
             Some(prefix) => { Box::new(prefix.bytes().chain(self.string.bytes())) }
         }
     }
-    pub fn append(&self, string: String) -> Strey {
-        Strey::new(Some(Prefix::Owned(Box::new(self.clone()))), string.into())
+    pub fn chars(&self) -> Box<dyn Iterator<Item=char> + '_> {
+        match &self.prefix {
+            None => { Box::new(self.string.chars()) }
+            Some(prefix) => { Box::new(prefix.chars().chain(self.string.chars())) }
+        }
     }
-    pub fn append_str(&self, string: &'static str) -> Strey {
-        Strey::new(Some(Prefix::Owned(Box::new(self.clone()))), string.into())
-    }
-    pub fn join(&'static self, string: String) -> Strey {
-        Strey::new(Some(Prefix::Borrowed(self)), string.into())
-    }
-    pub const fn join_str(&'static self, string: &'static str) -> Strey {
-        Strey::new(Some(Prefix::Borrowed(self)), Twine::Borrowed(string))
+    pub fn strip_prefix(&self, prefix: &Strey) -> Option<Box<dyn Iterator<Item=char> + '_>> {
+        todo!()
     }
 }
 

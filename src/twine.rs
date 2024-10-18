@@ -41,6 +41,12 @@ impl Twine {
             Twine::Borrowed(s) => { s.bytes() }
         }
     }
+    pub fn chars(&self) -> std::str::Chars {
+        match self {
+            Twine::Owned(s) => { s.chars() }
+            Twine::Borrowed(s) => { s.chars() }
+        }
+    }
 }
 
 impl From<String> for Twine {
