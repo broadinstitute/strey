@@ -1,2 +1,3 @@
 # strey
-Efficient strings, borrowed or owned, optionally shared prefixes and hashing for cheap comparison. Ideal for ids or keys.
+Memory-efficient strings. If you ever felt tempted to use Cow<'static, Arc<str>>, which doesn;t really work, this is for you. 
+Plus ability to share prefixes. Ideal for ids or keys.

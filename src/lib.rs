@@ -1,23 +1,55 @@
+use crate::twine::Twine;
 use std::cmp::Ordering;
 use std::fmt::Display;
-use std::sync::OnceLock;
-use crate::hashes::{calculate_hashes, Hashes};
-use crate::twine::Twine;
 
 pub mod twine;
-mod hashes;
+
+#[derive(Clone, Debug)]
+pub enum Prefix {
+    Borrowed(&'static Strey),
+    Owned(Box<Strey>)
+}
 
 #[derive(Clone, Debug)]
 pub struct Strey {
-    prefix: Option<Box<Strey>>,
+    prefix: Option<Prefix>,
     string: Twine,
-    hash_lock: OnceLock<Hashes>,
+}
+
+impl Prefix {
+    pub fn len(&self) -> usize {
+        match self {
+            Prefix::Borrowed(strey) => { strey.len() }
+            Prefix::Owned(strey) => { strey.len() }
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Prefix::Borrowed(strey) => { strey.is_empty() }
+            Prefix::Owned(strey) => { strey.is_empty() }
+        }
+    }
+    pub fn bytes(&self) -> Box<dyn Iterator<Item=u8> + '_> {
+        match self {
+            Prefix::Borrowed(strey) => { strey.bytes() }
+            Prefix::Owned(strey) => { strey.bytes() }
+        }
+    }
+}
+
+impl Display for Prefix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Prefix::Borrowed(strey) => { write!(f, "{}", strey)?; }
+            Prefix::Owned(strey) => { write!(f, "{}", strey)?; }
+        }
+        Ok(())
+    }
 }
 
 impl Strey {
-    pub const fn new(prefix: Option<Box<Strey>>, string: Twine) -> Strey {
-        let hash_lock = OnceLock::new();
-        Strey { prefix, string, hash_lock }
+    pub const fn new(prefix: Option<Prefix>, string: Twine) -> Strey {
+        Strey { prefix, string }
     }
 
     pub fn new_string(string: String) -> Strey {
@@ -28,9 +60,6 @@ impl Strey {
         Strey::new(None, Twine::new_str(string))
     }
 
-    fn get_hashes(&self) -> &Hashes {
-        self.hash_lock.get_or_init(|| calculate_hashes(&self.prefix, &self.string))
-    }
     pub fn len(&self) -> usize {
         match &self.prefix {
             None => { self.string.len() }
@@ -50,10 +79,16 @@ impl Strey {
         }
     }
     pub fn append(&self, string: String) -> Strey {
-        Strey::new(Some(Box::new(self.clone())), string.into())
+        Strey::new(Some(Prefix::Owned(Box::new(self.clone()))), string.into())
     }
     pub fn append_str(&self, string: &'static str) -> Strey {
-        Strey::new(Some(Box::new(self.clone())), string.into())
+        Strey::new(Some(Prefix::Owned(Box::new(self.clone()))), string.into())
+    }
+    pub fn join(&'static self, string: String) -> Strey {
+        Strey::new(Some(Prefix::Borrowed(self)), string.into())
+    }
+    pub const fn join_str(&'static self, string: &'static str) -> Strey {
+        Strey::new(Some(Prefix::Borrowed(self)), Twine::Borrowed(string))
     }
 }
 
@@ -71,7 +106,12 @@ impl Display for Strey {
 
 impl PartialEq for Strey {
     fn eq(&self, other: &Self) -> bool {
-        self.get_hashes() == other.get_hashes()
+        for (bs, bo) in self.bytes().zip(other.bytes()) {
+            if bs != bo {
+                return false;
+            }
+        }
+        true
     }
 }
 
