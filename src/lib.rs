@@ -1,56 +1,16 @@
 use crate::twine::Twine;
 use std::cmp::Ordering;
 use std::fmt::Display;
+use prefix::Prefix;
 
 pub mod twine;
-
-#[derive(Clone, Debug)]
-pub enum Prefix {
-    Borrowed(&'static Strey),
-    Owned(Box<Strey>)
-}
+mod prefix;
+mod iter;
 
 #[derive(Clone, Debug)]
 pub struct Strey {
     prefix: Option<Prefix>,
     string: Twine,
-}
-
-impl Prefix {
-    pub fn len(&self) -> usize {
-        match self {
-            Prefix::Borrowed(strey) => { strey.len() }
-            Prefix::Owned(strey) => { strey.len() }
-        }
-    }
-    pub fn is_empty(&self) -> bool {
-        match self {
-            Prefix::Borrowed(strey) => { strey.is_empty() }
-            Prefix::Owned(strey) => { strey.is_empty() }
-        }
-    }
-    pub fn bytes(&self) -> Box<dyn Iterator<Item=u8> + '_> {
-        match self {
-            Prefix::Borrowed(strey) => { strey.bytes() }
-            Prefix::Owned(strey) => { strey.bytes() }
-        }
-    }
-    pub fn chars(&self) -> Box<dyn Iterator<Item=char> + '_> {
-        match self {
-            Prefix::Borrowed(strey) => { strey.chars() }
-            Prefix::Owned(strey) => { strey.chars() }
-        }
-    }
-}
-
-impl Display for Prefix {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Prefix::Borrowed(strey) => { write!(f, "{}", strey)?; }
-            Prefix::Owned(strey) => { write!(f, "{}", strey)?; }
-        }
-        Ok(())
-    }
 }
 
 impl Strey {
@@ -91,16 +51,20 @@ impl Strey {
             Some(prefix) => { prefix.is_empty() && self.string.is_empty() }
         }
     }
-    pub fn bytes(&self) -> Box<dyn Iterator<Item=u8> + '_> {
+    pub fn bytes(&self) -> iter::Bytes {
         match &self.prefix {
-            None => { Box::new(self.string.bytes()) }
-            Some(prefix) => { Box::new(prefix.bytes().chain(self.string.bytes())) }
+            None => { iter::Bytes::Simple(self.string.bytes()) }
+            Some(prefix) => {
+                iter::Bytes::Prefixed(Box::new(prefix.bytes()).chain(self.string.bytes()))
+            }
         }
     }
-    pub fn chars(&self) -> Box<dyn Iterator<Item=char> + '_> {
+    pub fn chars(&self) -> iter::Chars {
         match &self.prefix {
-            None => { Box::new(self.string.chars()) }
-            Some(prefix) => { Box::new(prefix.chars().chain(self.string.chars())) }
+            None => { iter::Chars::Simple(self.string.chars()) }
+            Some(prefix) => {
+                iter::Chars::Prefixed(Box::new(prefix.chars()).chain(self.string.chars()))
+            }
         }
     }
 }
