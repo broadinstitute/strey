@@ -67,6 +67,25 @@ impl Strey {
             }
         }
     }
+    pub fn strip_prefix(&self, prefix: &Strey) -> Option<iter::Chars> {
+        let mut self_chars = self.chars();
+        let mut prefix_chars = prefix.chars();
+        loop {
+            match prefix_chars.next() {
+                None => { break Some(self_chars); }
+                Some(cp) => {
+                    match self_chars.next() {
+                        None => { break None; }
+                        Some(cs) => {
+                            if cp != cs {
+                                break None;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl Display for Strey {
