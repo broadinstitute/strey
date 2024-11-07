@@ -5,7 +5,7 @@ use prefix::Prefix;
 
 pub mod twine;
 mod prefix;
-mod iter;
+pub mod iter;
 
 #[derive(Clone, Debug)]
 pub struct Strey {
