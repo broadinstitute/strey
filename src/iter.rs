@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::iter::Chain;
 
 #[derive(Clone, Debug)]
@@ -32,5 +33,14 @@ impl Iterator for Chars<'_> {
             Chars::Simple(chars) => chars.next(),
             Chars::Prefixed(chain) => chain.next()
         }
+    }
+}
+
+impl Display for Chars<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        for c in self.clone() {
+            write!(f, "{}", c)?;
+        }
+        Ok(())
     }
 }
