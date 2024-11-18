@@ -86,6 +86,14 @@ impl Strey {
             }
         }
     }
+    pub fn provide_prefix_for<I>(&self, chars: &mut I) -> Strey
+    where I: Iterator<Item=char> {
+        match self.prefix {
+            None => {}
+            Some(_) => {}
+        }
+        todo!("provide_prefix_for")
+    }
 }
 
 impl Display for Strey {
