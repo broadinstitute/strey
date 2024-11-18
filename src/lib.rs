@@ -86,13 +86,13 @@ impl Strey {
             }
         }
     }
-    pub fn provide_prefix_for<I>(&self, chars: &mut I) -> Strey
-    where I: Iterator<Item=char> {
-        match self.prefix {
-            None => {}
-            Some(_) => {}
+    pub fn maybe_use_as_prefix_for(&self, strey: Strey) -> Strey {
+        match strey.strip_prefix(self) {
+            None => { strey }
+            Some(suffix) => {
+                Strey::new(Some(Prefix::from(self.clone())), suffix.collect())
+            }
         }
-        todo!("provide_prefix_for")
     }
 }
 

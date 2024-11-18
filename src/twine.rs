@@ -110,3 +110,13 @@ impl Ord for Twine {
         self.as_str().cmp(other.as_str())
     }
 }
+
+impl FromIterator<char> for Twine {
+    fn from_iter<I: IntoIterator<Item = char>>(iter: I) -> Self {
+        let mut s = String::new();
+        for c in iter {
+            s.push(c);
+        }
+        Twine::new(s)
+    }
+}

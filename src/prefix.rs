@@ -43,3 +43,9 @@ impl Display for Prefix {
         Ok(())
     }
 }
+
+impl From<Strey> for Prefix {
+    fn from(strey: Strey) -> Self {
+        Prefix::Owned(Box::new(strey))
+    }
+}
